@@ -1,35 +1,41 @@
 # Business Integration Dashboard API
 
-A comprehensive Python-based integration platform that connects and manages multiple business systems including CRM, ERP, e-commerce, scheduling, learning management, marketing automation, and customer support tools.
+A comprehensive Python-based integration platform that connects and manages multiple business systems including CRM, ERP, e-commerce, scheduling, learning management, marketing automation, and customer support tools. Now featuring **secure OAuth2 authentication** for industry-standard access to user data.
 
 ## 🌟 Features
 
 - **Multi-System Integration**: Seamlessly connect to 8+ different business platforms
+- **OAuth2 Authentication**: Secure, industry-standard authentication for all supported services
 - **Unified API Management**: Single interface for managing all your business tools
 - **Real-time Synchronization**: Keep customer data synchronized across all platforms
 - **Dashboard Overview**: Get a complete status overview of all connected systems
+- **Web-Based Authentication**: User-friendly web interface for OAuth2 flows
+- **Automatic Token Management**: Handles token refresh and expiration automatically
 - **Error Handling**: Robust error handling and logging for reliable operations
 - **Slack Integration**: Real-time notifications and alerts via Slack
+- **PKCE Security**: Enhanced OAuth2 security with Proof Key for Code Exchange
 
 ## 🔧 Supported Integrations
 
-### 1. CRM Integration (Salesforce)
+### 1. CRM Integration (Salesforce) - OAuth2 ✅
 
 - Create and manage leads
 - Customer data management
 - Opportunity tracking
 - Task management
 - Lead conversion
+- **Authentication**: OAuth2 with automatic token refresh
 
-### 2. ERP Integration (Odoo)
+### 2. ERP Integration (Odoo) - Traditional Auth ⚙️
 
 - Inventory management
 - Purchase order creation
 - Sales order tracking
 - Vendor management
 - Stock level updates
+- **Authentication**: Username/Password (legacy system)
 
-### 3. E-commerce Integration (Shopify)
+### 3. E-commerce Integration (Shopify) - OAuth2 ✅
 
 - Order management
 - Product catalog management
@@ -37,53 +43,80 @@ A comprehensive Python-based integration platform that connects and manages mult
 - Customer management
 - Discount code creation
 - Order fulfillment
+- **Authentication**: OAuth2 with store-specific permissions
 
-### 4. Appointment Scheduling (Calendly)
+### 4. Appointment Scheduling (Calendly) - OAuth2 ✅
 
 - Event management
 - Event type configuration
 - Appointment cancellation
 - Invitee management
+- **Authentication**: OAuth2 with user consent
 
-### 5. Learning Management System
+### 5. Learning Management System - API Key 🔑
 
 - Student enrollment
 - Course management
 - Progress tracking
 - Assignment creation
+- **Authentication**: API Key or custom authentication
 
-### 6. Marketing Automation (HubSpot)
+### 6. Marketing Automation (HubSpot) - OAuth2 ✅
 
 - Contact management
 - Campaign creation
 - Email marketing
 - Analytics and reporting
 - List management
+- **Authentication**: OAuth2 with granular scopes
 
-### 7. Customer Support (Zendesk)
+### 7. Customer Support (Zendesk) - OAuth2 ✅
 
 - Ticket management
 - Customer support workflows
 - User management
 - Ticket search and filtering
+- **Authentication**: OAuth2 with subdomain-specific access
 
-### 8. Communication (Slack)
+### 8. Communication (Slack) - OAuth2 ✅
 
 - Message sending
 - Channel management
 - File uploads
 - Scheduled messages
 - Alert notifications
+- **Authentication**: OAuth2 with workspace permissions
 
-## 📋 Prerequisites
+## 🔐 Authentication Methods
+
+This integration platform supports multiple authentication methods:
+
+### **OAuth2 (Recommended)** 🛡️
+- **Services**: Salesforce, Shopify, HubSpot, Slack, Calendly, Zendesk
+- **Security**: Industry-standard with PKCE enhancement
+- **User Experience**: Web-based consent flow
+- **Token Management**: Automatic refresh and expiration handling
+
+### **Traditional Authentication** ⚙️
+- **Services**: Odoo/ERP (username/password)
+- **Usage**: Legacy systems that don't support OAuth2
+
+### **API Key Authentication** �
+- **Services**: Custom LMS or other services
+- **Usage**: Simple token-based authentication
+
+## �📋 Prerequisites
 
 Before running this application, ensure you have:
 
 - Python 3.7 or higher
-- Valid API credentials for the services you want to integrate
+- Valid OAuth2 app credentials for the services you want to integrate
 - Network access to the respective APIs
+- (Optional) Web browser for OAuth2 authentication flows
 
 ## 🚀 Installation
+
+### Option 1: OAuth2-Enabled Installation (Recommended)
 
 1. **Clone the repository**
 
@@ -95,15 +128,74 @@ Before running this application, ensure you have:
 2. **Install dependencies**
 
    ```bash
-   pip install requests slack-sdk python-dotenv
+   pip install -r requirements.txt
    ```
 
-3. **Set up environment variables**
+3. **Set up OAuth2 environment variables**
 
-   Create a `.env` file with your API credentials:
+   Create a `.env` file with your OAuth2 app credentials:
 
    ```env
-   # CRM Configuration
+   # Flask Configuration
+   FLASK_SECRET_KEY=your-super-secret-key-change-this
+
+   # OAuth2 Redirect URI Base
+   OAUTH_REDIRECT_URI=http://localhost:8000/oauth/callback
+
+   # Salesforce OAuth2
+   SALESFORCE_CLIENT_ID=your_salesforce_client_id
+   SALESFORCE_CLIENT_SECRET=your_salesforce_client_secret
+   SALESFORCE_SANDBOX=false
+
+   # Shopify OAuth2
+   SHOPIFY_CLIENT_ID=your_shopify_client_id
+   SHOPIFY_CLIENT_SECRET=your_shopify_client_secret
+   SHOPIFY_SHOP_DOMAIN=your-shop.myshopify.com
+
+   # HubSpot OAuth2
+   HUBSPOT_CLIENT_ID=your_hubspot_client_id
+   HUBSPOT_CLIENT_SECRET=your_hubspot_client_secret
+
+   # Slack OAuth2
+   SLACK_CLIENT_ID=your_slack_client_id
+   SLACK_CLIENT_SECRET=your_slack_client_secret
+
+   # Calendly OAuth2
+   CALENDLY_CLIENT_ID=your_calendly_client_id
+   CALENDLY_CLIENT_SECRET=your_calendly_client_secret
+
+   # Zendesk OAuth2
+   ZENDESK_CLIENT_ID=your_zendesk_client_id
+   ZENDESK_CLIENT_SECRET=your_zendesk_client_secret
+   ZENDESK_SUBDOMAIN=your_zendesk_subdomain
+
+   # ERP (Traditional Auth)
+   ERP_BASE_URL=http://your-odoo-instance.com
+   ERP_DB=your_database_name
+   ERP_USERNAME=your_username
+   ERP_PASSWORD=your_password
+   ```
+
+4. **Set up OAuth2 applications**
+
+   Follow the detailed setup guide in [`OAUTH2_SETUP.md`](OAUTH2_SETUP.md) to create OAuth2 applications for each service.
+
+5. **Run the OAuth2 web application**
+
+   ```bash
+   python oauth2_webapp.py
+   ```
+
+   Visit http://localhost:8000 to authenticate with services.
+
+### Option 2: Legacy Installation (API Keys/Tokens)
+
+1. **Clone and install** (same as above)
+
+2. **Set up legacy environment variables**
+
+   ```env
+   # CRM Configuration (Legacy)
    CRM_API_KEY=your_salesforce_api_key
    CRM_BASE_URL=https://api.salesforce.com
 
@@ -115,47 +207,55 @@ Before running this application, ensure you have:
    ERP_USERNAME=your_odoo_username
    ERP_PASSWORD=your_odoo_password
 
-   # E-commerce Configuration
+   # E-commerce Configuration (Legacy Tokens)
    SHOPIFY_ACCESS_TOKEN=your_shopify_token
    SHOPIFY_STORE_URL=your_shopify_store_url
 
-   # Scheduling Configuration
-   CALENDLY_ACCESS_TOKEN=your_calendly_token
-
-   # Learning Management Configuration
-   LEARNING_ACCESS_TOKEN=your_lms_token
-   LEARNING_BASE_URL=your_lms_base_url
-
-   # Marketing Configuration
-   HUBSPOT_ACCESS_TOKEN=your_hubspot_token
-
-   # Support Configuration
-   ZENDESK_ACCESS_TOKEN=your_zendesk_token
-   ZENDESK_SUBDOMAIN=your_zendesk_subdomain
-   ZENDESK_EMAIL=your_zendesk_email
-
-   # Communication Configuration
-   SLACK_BOT_TOKEN=your_slack_bot_token
-   SLACK_CHANNEL=#general
+   # Other services... (use legacy tokens)
    ```
 
 ## 📖 Usage
 
-### Basic Setup
+### OAuth2-Enabled Usage (Recommended)
+
+```python
+from oauth2_integration import OAuth2APIConfig, OAuth2DashboardManager
+
+# Configuration loaded from environment variables
+config = OAuth2APIConfig()
+dashboard = OAuth2DashboardManager(config)
+
+# Check authentication status
+auth_status = dashboard.get_authentication_status()
+print("Authentication Status:")
+for service, is_authenticated in auth_status.items():
+    status = "✅ Authenticated" if is_authenticated else "❌ Not Authenticated"
+    print(f"  {service}: {status}")
+
+# Get authorization URLs for unauthenticated services
+if not dashboard.crm.is_authenticated():
+    print(f"Authenticate Salesforce: {dashboard.crm.get_authorization_url()}")
+
+# Use authenticated services (same interface as before!)
+if dashboard.crm.is_authenticated():
+    leads = dashboard.crm.get_all_leads(limit=10)
+    print(f"Found {len(leads.get('data', {}).get('records', []))} leads")
+
+# System status with authentication info
+summary = dashboard.get_dashboard_summary()
+print(summary)
+```
+
+### Legacy Usage (API Keys/Tokens)
 
 ```python
 from FirstBluePrint import APIConfig, DashboardManager
 
-# Configure API credentials
+# Configure API credentials manually
 config = APIConfig(
     crm_api_key="your_crm_key",
     erp_api_key="your_erp_key",
-    erp_client_id="your_erp_client_id",
-    erp_base_url="your_erp_url",
-    erp_db="your_erp_db",
-    erp_username="your_erp_username",
-    erp_password="your_erp_password",
-    slack_bot_token="your_slack_token",
+    # ... other legacy credentials
     shopify_access_token="your_shopify_token",
     shopify_store_url="your_shopify_url",
     calendly_access_token="your_calendly_token",
@@ -173,6 +273,61 @@ dashboard = DashboardManager(config)
 # Get system status overview
 summary = dashboard.get_dashboard_summary()
 print(summary)
+```
+
+### Web Interface Usage
+
+For easy OAuth2 authentication, run the web interface:
+
+```bash
+python oauth2_webapp.py
+```
+
+Then visit `http://localhost:8000` to:
+- See authentication status for all services
+- Authenticate with each service using OAuth2  
+- View connection health and system overview
+- Access API endpoints through web interface
+
+### Programmatic OAuth2 Flow
+
+```python
+from oauth2_auth import OAuth2Manager
+
+# Initialize OAuth2 manager
+oauth2_manager = OAuth2Manager()
+
+# Get authorization URL for a service
+auth_url = oauth2_manager.get_authorization_url('salesforce')
+print(f"Visit: {auth_url}")
+
+# After user visits URL and gets code, exchange for tokens
+tokens = oauth2_manager.exchange_code_for_tokens(
+    service='salesforce',
+    authorization_code='received_code',
+    code_verifier='your_verifier'  # Store this from get_authorization_url call
+)
+
+# Tokens are automatically stored for future use
+```
+
+## 🔧 Service Configuration
+
+Each service requires specific OAuth2 configuration. See [OAUTH2_SETUP.md](OAUTH2_SETUP.md) for detailed setup instructions.
+
+### Quick Configuration Example
+
+```python
+from oauth2_auth import ServiceOAuth2Configs
+
+# Get configuration for a service
+salesforce_config = ServiceOAuth2Configs.get_config('salesforce')
+print(f"Authorization URL: {salesforce_config['auth_url']}")
+print(f"Required Scopes: {salesforce_config['scopes']}")
+
+# Check if service supports OAuth2
+services = ServiceOAuth2Configs.get_supported_services()
+print(f"OAuth2 Supported: {services}")
 ```
 
 ### CRM Operations
@@ -373,10 +528,32 @@ print(sync_result)
 
 ## 🏗️ Architecture
 
-### Class Structure
+### OAuth2-Enhanced Architecture
+
+The platform now supports both OAuth2 and legacy authentication methods with a three-layer architecture:
+
+#### Layer 1: OAuth2 Authentication Engine (`oauth2_auth.py`)
+- **OAuth2Manager**: Core OAuth2 protocol implementation with PKCE security
+- **OAuth2Token**: Token storage and automatic refresh management
+- **ServiceOAuth2Configs**: Pre-configured OAuth2 settings for all supported services
+- Handles authorization flows, token exchanges, and credential storage
+
+#### Layer 2: Business Integration Layer (`oauth2_integration.py`)
+- **OAuth2BaseIntegration**: Enhanced base class with OAuth2 authentication
+- **OAuth2CRMIntegration**, **OAuth2ERPIntegration**, etc.: Service-specific implementations
+- **OAuth2DashboardManager**: Unified dashboard with OAuth2 capabilities
+- Maintains same API interface as legacy classes for backward compatibility
+
+#### Layer 3: Web Interface (`oauth2_webapp.py`)
+- **Flask web application**: User-friendly OAuth2 authentication interface
+- **Dashboard routes**: Authentication status, service management, API testing
+- **OAuth2 callback handling**: Secure authorization code exchange
+- **System overview**: Real-time connection status and health monitoring
+
+### Legacy Architecture
 
 ```
-DashboardManager
+DashboardManager (FirstBluePrint.py)
 ├── CRMIntegration (Salesforce)
 ├── ERPIntegration (Odoo)
 ├── OnlineStoreIntegration (Shopify)
@@ -396,14 +573,104 @@ All integrations inherit from `BaseIntegration` which provides:
 - Session management
 - Consistent error responses
 
+## 🔒 OAuth2 User Data Access Flow
+
+### How OAuth2 Enables Secure User Data Access
+
+With OAuth2 implementation, users can securely grant your application access to their data across all integrated systems **without sharing their passwords**:
+
+1. **User Authentication Request**: User clicks "Connect [Service]" in your app
+2. **Redirect to Service**: User is redirected to the service's official login page (e.g., Salesforce, Shopify)
+3. **User Grants Permission**: User logs in with their own credentials and grants specific permissions
+4. **Secure Token Exchange**: Service redirects back with authorization code, app exchanges it for access tokens
+5. **Data Access**: App can now access user's data in that service using the token
+6. **Automatic Refresh**: Tokens are automatically refreshed to maintain access
+
+### Benefits for Users
+
+- **No Password Sharing**: Users never give their passwords to your app
+- **Granular Permissions**: Users control exactly what data your app can access
+- **Revocable Access**: Users can revoke access anytime from their service settings
+- **Secure**: Industry-standard security with PKCE enhancement
+- **Transparent**: Users see exactly what permissions are being requested
+
+### Example User Experience
+
+```python
+# User workflow with OAuth2
+dashboard = OAuth2DashboardManager(config)
+
+# Check what services need user authentication
+auth_status = dashboard.get_authentication_status()
+for service, authenticated in auth_status.items():
+    if not authenticated:
+        print(f"User needs to authenticate with {service}")
+        # User visits the authorization URL to grant access
+        auth_url = getattr(dashboard, service).get_authorization_url()
+        print(f"Visit: {auth_url}")
+
+# Once authenticated, access user's data seamlessly
+if dashboard.crm.is_authenticated():
+    # Access user's Salesforce data
+    user_leads = dashboard.crm.get_all_leads()
+    
+if dashboard.store.is_authenticated():
+    # Access user's Shopify store data
+    user_orders = dashboard.store.get_orders()
+```
+
+## 📊 User Data Access Capabilities
+
+Once users authenticate through OAuth2, your application can access their data across all registered systems:
+
+### What Users Can Access Through Your App
+
+| Service | User Data Available | Permissions Required |
+|---------|-------------------|---------------------|
+| **Salesforce CRM** | Leads, Contacts, Opportunities, Tasks, Accounts | `api`, `refresh_token` |
+| **Shopify Store** | Orders, Products, Customers, Inventory, Analytics | `read_orders`, `read_products`, `write_inventory` |
+| **HubSpot Marketing** | Contacts, Companies, Deals, Email Campaigns | `contacts`, `content` |
+| **Slack Workspace** | Channels, Messages, Files, Team Members | `channels:read`, `chat:write`, `files:write` |
+| **Calendly Scheduling** | Events, Event Types, Invitees, Availability | `read`, `write` |
+| **Zendesk Support** | Tickets, Users, Organizations, Knowledge Base | `read`, `write` |
+
+### User Control & Privacy
+
+- **Granular Permissions**: Users choose exactly what data to share
+- **Real-time Revocation**: Users can disconnect any service instantly
+- **Audit Trail**: All API calls are logged for transparency
+- **Data Ownership**: Users retain full ownership of their data
+- **No Data Storage**: App accesses data in real-time, doesn't store personal data
+
+### Multi-User Support
+
+```python
+# Each user gets their own authenticated session
+user1_dashboard = OAuth2DashboardManager(user1_config)
+user2_dashboard = OAuth2DashboardManager(user2_config)
+
+# Users can access their own data independently
+user1_leads = user1_dashboard.crm.get_all_leads()  # User 1's Salesforce data
+user2_orders = user2_dashboard.store.get_orders()  # User 2's Shopify data
+```
+
 ## 🔒 Security Best Practices
 
-- Store API credentials securely using environment variables
-- Use HTTPS for all API communications
+### OAuth2 Security
+- **PKCE Implementation**: Enhanced security with Proof Key for Code Exchange
+- **Secure Token Storage**: Tokens encrypted and stored securely
+- **Automatic Token Refresh**: Prevents expired token issues
+- **Scope Limitation**: Request only necessary permissions from users
+- **State Parameter**: Prevents CSRF attacks during OAuth2 flow
+
+### General Security
+- Store OAuth2 app credentials securely using environment variables
+- Use HTTPS for all API communications and OAuth2 redirects
 - Implement proper authentication for each service
-- Regularly rotate API keys and tokens
+- Regularly rotate OAuth2 app secrets
 - Monitor API usage and access logs
 - Never commit credentials to version control
+- Validate all OAuth2 callback parameters
 
 ## 📊 Monitoring & Logging
 
@@ -484,12 +751,28 @@ For support and questions:
 
 ## 📚 Dependencies
 
-Key dependencies include:
+### Core Dependencies
 
-- `requests` - HTTP library for API calls
-- `slack-sdk` - Official Slack SDK for Python
+- `requests` - HTTP library for API calls  
 - `python-dotenv` - Environment variable management
 - `xmlrpc.client` - XML-RPC client for Odoo integration
+
+### OAuth2 Dependencies
+
+- `flask` - Web framework for OAuth2 callback handling
+- `secrets` - Secure token generation for PKCE
+- `hashlib` - SHA256 hashing for PKCE code challenges
+- `base64` - URL-safe encoding for OAuth2 parameters
+- `urllib.parse` - URL parameter encoding/decoding
+
+### Service-Specific Dependencies
+
+- `slack-sdk` - Official Slack SDK for Python (optional, can use requests)
+
+### Optional Dependencies
+
+- `cryptography` - Enhanced security for token storage
+- `keyring` - Secure credential storage (future enhancement)
 
 ---
 
