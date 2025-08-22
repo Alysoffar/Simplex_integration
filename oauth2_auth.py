@@ -9,6 +9,8 @@ import base64
 import hashlib
 import secrets
 import urllib.parse
+import os
+import json
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
@@ -38,11 +40,19 @@ class OAuth2Token:
     scope: Optional[str] = None
 
 class OAuth2Manager:
-    """Manages OAuth2 authentication for multiple services"""
-    
-    def __init__(self):
+    """Manages OAuth2 authentication for multiple services with optional disk persistence.
+
+    Token persistence:
+        - File path configurable via env var `OAUTH2_TOKEN_STORE` (default: .oauth_tokens.json)
+        - Stores: access_token, refresh_token, expires_at (isoformat), token_type, scope
+        - Persistence is best-effort: failures log warnings but do not raise.
+    """
+
+    def __init__(self, token_store_path: Optional[str] = None):
         self.tokens: Dict[str, OAuth2Token] = {}
         self.configs: Dict[str, OAuth2Config] = {}
+        self.token_store_path = token_store_path or os.getenv("OAUTH2_TOKEN_STORE", ".oauth_tokens.json")
+        self._load_tokens()
         
     def add_service_config(self, service_name: str, config: OAuth2Config):
         """Add OAuth2 configuration for a service"""
@@ -131,6 +141,7 @@ class OAuth2Manager:
             
             # Store token
             self.tokens[service_name] = token
+            self._save_tokens()
             
             logger.info(f"Successfully obtained OAuth2 token for {service_name}")
             return token
@@ -187,6 +198,7 @@ class OAuth2Manager:
                 current_token.refresh_token = token_data['refresh_token']
                 
             logger.info(f"Successfully refreshed OAuth2 token for {service_name}")
+            self._save_tokens()
             return current_token
             
         except requests.RequestException as e:
@@ -222,6 +234,7 @@ class OAuth2Manager:
         if service_name in self.tokens:
             del self.tokens[service_name]
             logger.info(f"Revoked token for {service_name}")
+            self._save_tokens()
             
     def _store_code_verifier(self, service_name: str, state: str, code_verifier: str):
         """Store PKCE code verifier temporarily"""
@@ -238,6 +251,49 @@ class OAuth2Manager:
         if key not in self._code_verifiers:
             raise ValueError("Invalid state parameter")
         return self._code_verifiers.pop(key)
+
+    # ------------------------------
+    # Persistence Helpers
+    # ------------------------------
+    def _save_tokens(self):
+        """Persist tokens to disk (best-effort)."""
+        if not self.token_store_path:
+            return
+        try:
+            serializable = {}
+            for svc, tok in self.tokens.items():
+                serializable[svc] = {
+                    "access_token": tok.access_token,
+                    "refresh_token": tok.refresh_token,
+                    "expires_at": tok.expires_at.isoformat() if tok.expires_at else None,
+                    "token_type": tok.token_type,
+                    "scope": tok.scope,
+                }
+            with open(self.token_store_path, 'w', encoding='utf-8') as f:
+                json.dump(serializable, f, indent=2)
+        except Exception as e:  # noqa
+            logger.warning(f"Failed to save OAuth2 tokens: {e}")
+
+    def _load_tokens(self):
+        """Load tokens from disk if present."""
+        path = self.token_store_path
+        if not path or not os.path.exists(path):
+            return
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            for svc, tok in data.items():
+                expires_at = tok.get("expires_at")
+                self.tokens[svc] = OAuth2Token(
+                    access_token=tok.get("access_token"),
+                    refresh_token=tok.get("refresh_token"),
+                    expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
+                    token_type=tok.get("token_type", "Bearer"),
+                    scope=tok.get("scope"),
+                )
+            logger.info(f"Loaded persisted OAuth2 tokens for services: {list(self.tokens.keys())}")
+        except Exception as e:  # noqa
+            logger.warning(f"Failed to load persisted OAuth2 tokens: {e}")
 
 class ServiceOAuth2Configs:
     """Predefined OAuth2 configurations for supported services"""

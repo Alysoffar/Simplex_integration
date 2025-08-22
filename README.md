@@ -14,6 +14,7 @@ A comprehensive Python-based integration platform that connects and manages mult
 - **Error Handling**: Robust error handling and logging for reliable operations
 - **Slack Integration**: Real-time notifications and alerts via Slack
 - **PKCE Security**: Enhanced OAuth2 security with Proof Key for Code Exchange
+- **MCP / LLM Tooling**: Expose business operations as Model Context Protocol tools for LangGraph / LLM agents
 
 ## 🔧 Supported Integrations
 
@@ -131,6 +132,13 @@ Before running this application, ensure you have:
    pip install -r requirements.txt
    ```
 
+    (Optional) To enable full MCP protocol support (instead of fallback REPL) also install a compatible MCP server library (example placeholder):
+
+    ```bash
+    # Example (uncomment corresponding line in requirements.txt if you add a real library)
+    # pip install mcp
+    ```
+
 3. **Set up OAuth2 environment variables**
 
    Create a `.env` file with your OAuth2 app credentials:
@@ -215,6 +223,77 @@ Before running this application, ensure you have:
    ```
 
 ## 📖 Usage
+
+### 🤖 LLM / MCP Server Integration
+
+This project ships with an optional **MCP server** (`mcp_server.py`) that exposes the dashboard’s capabilities as callable tools for Large Language Model agents (e.g. LangGraph, OpenAI Assistants with MCP client support).
+
+#### What It Provides
+| Tool | Purpose |
+|------|---------|
+| `get_dashboard_summary` | High-level system & auth status snapshot |
+| `get_authentication_status` | Boolean auth flags per service |
+| `get_authorization_urls` | URLs to start OAuth2 flows |
+| `complete_oauth2_flow` | Exchanges code+state for tokens |
+| `revoke_service_authentication` | Revokes stored token |
+| `crm_create_lead` / `crm_get_leads` / `crm_convert_lead` | Salesforce CRM operations |
+| `store_get_orders` | Shopify order retrieval |
+| `marketing_get_contacts` | HubSpot contacts |
+| `support_get_tickets` / `support_create_ticket` | Zendesk tickets |
+| `appointments_get_events` | Calendly events |
+| `erp_fetch_inventory` | Odoo inventory (legacy auth) |
+| `slack_send_message` / `slack_send_alert` | Slack messaging |
+| `introspect_tools` | List currently registered tools |
+
+#### Running the MCP Server
+
+```bash
+python mcp_server.py
+```
+
+If a real MCP library is not installed, a lightweight JSON-line REPL is available. Type JSON requests like:
+
+```json
+{"tool": "get_authentication_status"}
+```
+
+Example OAuth2 initiation followed by token exchange (after user completed browser auth):
+
+```json
+{"tool": "get_authorization_urls"}
+{"tool": "complete_oauth2_flow", "args": {"service_name": "salesforce", "authorization_code": "<code>", "state": "<state>"}}
+```
+
+#### Using with LangGraph (Conceptual Snippet)
+
+```python
+from some_mcp_client import MCPClient
+
+client = MCPClient(command=["python", "mcp_server.py"])  # Launch server
+
+auth_status = client.call_tool("get_authentication_status")
+if not auth_status["salesforce"]:
+    urls = client.call_tool("get_authorization_urls")
+    print("Visit:", urls["salesforce"])  # Complete browser flow then continue
+
+leads = client.call_tool("crm_get_leads", {"limit": 5})
+print(leads)
+```
+
+#### Token Persistence
+Tokens are cached to a JSON file (`.oauth_tokens.json` by default) so LLM / agent sessions can resume without re-authentication.
+
+Configure a custom path via:
+```env
+OAUTH2_TOKEN_STORE=.secure_tokens/tokens.json
+```
+
+Security recommendations:
+- Add the token store file to `.gitignore`
+- Restrict filesystem permissions (700 / Windows equivalent)
+- Consider encrypting at rest (future enhancement)
+
+---
 
 ### OAuth2-Enabled Usage (Recommended)
 
@@ -773,6 +852,7 @@ For support and questions:
 
 - `cryptography` - Enhanced security for token storage
 - `keyring` - Secure credential storage (future enhancement)
+- `mcp` - (Optional) Real MCP protocol implementation for `mcp_server.py`
 
 ---
 

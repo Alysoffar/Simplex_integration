@@ -3,3 +3,5 @@ slack-sdk>=3.0.0
 python-dotenv>=0.19.0
 flask>=2.0.0
 cryptography>=3.4.0
+# Optional for MCP server (uncomment when using a real MCP library)
+# mcp>=0.1.0
